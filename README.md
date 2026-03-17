@@ -11,6 +11,7 @@ A Node.js backend API that delivers daily book insights as lock screen wallpaper
 - **Image Generation:** canvas + sharp
 - **Storage:** Amazon S3
 - **Auth:** JWT (OTP-based login)
+- **API Docs:** Swagger UI
 
 ## Getting Started
 
@@ -65,6 +66,16 @@ See `.env.example` for the full list.
 | ---------------- | ---------------------------------- |
 | `npm run dev`    | Start dev server with nodemon      |
 | `npm start`      | Start production server            |
+
+## API Documentation (Swagger)
+
+Once the server is running, open Swagger UI in your browser:
+
+```
+http://localhost:5000/api-docs
+```
+
+You can view all endpoints, request/response schemas, and test APIs directly from the browser.
 
 ## API Endpoints
 
