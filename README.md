@@ -60,6 +60,11 @@ Copy `.env.example` to `.env` and update the values:
 
 See `.env.example` for the full list.
 
+## Development Notes
+
+- **Dev OTP:** Use `1234` as OTP for all phone numbers in development mode (`NODE_ENV=development`).
+- **S3 is optional:** Wallpaper images are returned directly in the API response when S3 is not configured.
+
 ## Scripts
 
 | Command          | Description                        |
