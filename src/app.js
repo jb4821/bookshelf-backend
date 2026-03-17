@@ -3,6 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
 import errorHandler from "./middleware/errorHandler.js";
+import authRoutes from "./routes/auth.routes.js";
 
 const app = express();
 
@@ -17,8 +18,8 @@ app.get("/api/v1/health", (req, res) => {
   res.json({ success: true, data: { status: "ok" } });
 });
 
-// TODO: Register routes here
-// app.use("/api/v1/auth", authRoutes);
+// Routes
+app.use("/api/v1/auth", authRoutes);
 // app.use("/api/v1/books", bookRoutes);
 // app.use("/api/v1/active-book", activeBookRoutes);
 // app.use("/api/v1/purchase", purchaseRoutes);
