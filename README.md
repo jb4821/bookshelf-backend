@@ -123,6 +123,11 @@ Base URL: `/api/v1`
 └── package.json
 ```
 
+## Testing the API
+
+- **Postman Collection:** Import `postman/BookShelf_API.postman_collection.json` into Postman. It includes all endpoints organized by folder with auto-saving variables for tokens and IDs.
+- **Step-by-step Guide:** See [API_TESTING_GUIDE.md](API_TESTING_GUIDE.md) for a complete walkthrough of testing every endpoint.
+
 ## Documentation
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the full system architecture, database design, API details, and implementation phases.
