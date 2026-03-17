@@ -14,6 +14,7 @@ import {
   updateBook,
   deleteBook,
 } from "../controllers/book.controller.js";
+import { importBookJson } from "../controllers/admin.controller.js";
 
 const router = Router();
 
@@ -258,5 +259,124 @@ router.put("/books/:id", validate(updateBookSchema), updateBook);
  *         description: Book not found
  */
 router.delete("/books/:id", deleteBook);
+
+// ─── Import Routes ───────────────────────────────────
+
+const importJsonSchema = Joi.object({
+  s3Key: Joi.string(),
+  data: Joi.object({
+    book: Joi.string(),
+    author: Joi.string(),
+    chapters: Joi.array()
+      .items(
+        Joi.object({
+          number: Joi.number().required(),
+          title: Joi.string().allow(null, ""),
+          quotes: Joi.array().items(Joi.object()).required(),
+        })
+      )
+      .required(),
+  }),
+}).or("s3Key", "data");
+
+/**
+ * @swagger
+ * /admin/books/{bookId}/import-json:
+ *   post:
+ *     summary: Import quotes from JSON
+ *     description: |
+ *       Import book content from a JSON file. Provide either:
+ *       - `s3Key`: path to JSON file in S3 (e.g., "imports/atomic-habits.json")
+ *       - `data`: direct JSON object with chapters and quotes
+ *
+ *       The import will replace all existing content for the book.
+ *       Minimum 31 quotes required.
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: bookId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               s3Key:
+ *                 type: string
+ *                 example: imports/atomic-habits.json
+ *                 description: S3 key to JSON file
+ *               data:
+ *                 type: object
+ *                 description: Direct JSON with chapters and quotes
+ *                 properties:
+ *                   book:
+ *                     type: string
+ *                     example: Atomic Habits
+ *                   author:
+ *                     type: string
+ *                     example: James Clear
+ *                   chapters:
+ *                     type: array
+ *                     items:
+ *                       type: object
+ *                       properties:
+ *                         number:
+ *                           type: integer
+ *                           example: 1
+ *                         title:
+ *                           type: string
+ *                           example: The Surprising Power of Atomic Habits
+ *                         quotes:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               id:
+ *                                 type: integer
+ *                               quote_en:
+ *                                 type: string
+ *                               short_description_en:
+ *                                 type: string
+ *                               quote_hi:
+ *                                 type: string
+ *                               short_description_hi:
+ *                                 type: string
+ *     responses:
+ *       200:
+ *         description: Import successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: Successfully imported 35 quotes
+ *                     totalQuotes:
+ *                       type: integer
+ *                       example: 35
+ *       400:
+ *         description: Invalid JSON or insufficient quotes (min 31)
+ *       404:
+ *         description: Book not found
+ */
+router.post(
+  "/books/:bookId/import-json",
+  validate(importJsonSchema),
+  importBookJson
+);
 
 export default router;
