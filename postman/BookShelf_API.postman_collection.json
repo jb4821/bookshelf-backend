@@ -1,0 +1,769 @@
+{
+  "info": {
+    "name": "BookShelf API",
+    "description": "Daily Book Insights Wallpaper App — Backend API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api/v1"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
+      "value": ""
+    },
+    {
+      "key": "category_id",
+      "value": ""
+    },
+    {
+      "key": "book_id",
+      "value": ""
+    },
+    {
+      "key": "purchase_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints (OTP login & JWT tokens)",
+      "item": [
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/send-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "send-otp"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+919876543210\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify OTP (Login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('token', res.data.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', res.data.refreshToken);",
+                  "  console.log('Token saved!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-otp"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+919876543210\",\n  \"otp\": \"1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify OTP (Admin Login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('admin_token', res.data.accessToken);",
+                  "  console.log('Admin token saved!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/verify-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-otp"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+919876543210\",\n  \"otp\": \"1234\"\n}"
+            },
+            "description": "Use this after updating user role to ADMIN in DB. Token auto-saves to admin_token variable."
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('token', res.data.accessToken);",
+                  "  pm.collectionVariables.set('refresh_token', res.data.refreshToken);",
+                  "  console.log('Tokens refreshed!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/refresh-token",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh-token"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Send OTP (Invalid Phone)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/send-otp",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "send-otp"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"abc\"\n}"
+            },
+            "description": "Should return 400 - Invalid phone number format"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Categories",
+      "description": "Category CRUD (requires ADMIN role)",
+      "item": [
+        {
+          "name": "Create Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('category_id', res.data.id);",
+                  "  console.log('Category ID saved: ' + res.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/categories",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Self Help\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Categories",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/categories",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "categories"]
+            }
+          }
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "categories", "{{category_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Self-Help & Motivation\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/categories/{{category_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "categories", "{{category_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Category (Duplicate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/categories",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "categories"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Self Help\"\n}"
+            },
+            "description": "Should return 409 - Category already exists"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Books",
+      "description": "Book CRUD (requires ADMIN role)",
+      "item": [
+        {
+          "name": "Create Book",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('book_id', res.data.id);",
+                  "  console.log('Book ID saved: ' + res.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/books",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "books"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Atomic Habits\",\n  \"author\": \"James Clear\",\n  \"categoryId\": \"{{category_id}}\",\n  \"price\": 99\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Book",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/books/{{book_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "books", "{{book_id}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Atomic Habits - Updated Edition\",\n  \"price\": 149\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Book",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/books/{{book_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "books", "{{book_id}}"]
+            },
+            "description": "Warning: Deletes book and all its content"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin — Import Quotes",
+      "description": "Import book content from JSON",
+      "item": [
+        {
+          "name": "Import Quotes (Direct JSON — 31 quotes)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/books/{{book_id}}/import-json",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "books", "{{book_id}}", "import-json"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"data\": {\n    \"book\": \"Atomic Habits\",\n    \"author\": \"James Clear\",\n    \"chapters\": [\n      {\n        \"number\": 1,\n        \"title\": \"The Surprising Power of Atomic Habits\",\n        \"quotes\": [\n          { \"id\": 1, \"quote_en\": \"Habits are the compound interest of self-improvement.\", \"short_description_en\": \"Small daily improvements lead to remarkable results over time.\", \"quote_hi\": \"आदतें आत्म-सुधार का चक्रवृद्धि ब्याज हैं।\", \"short_description_hi\": \"छोटे दैनिक सुधार समय के साथ उल्लेखनीय परिणाम देते हैं।\" },\n          { \"id\": 2, \"quote_en\": \"You do not rise to the level of your goals. You fall to the level of your systems.\", \"short_description_en\": \"Goals set direction, but systems determine progress.\", \"quote_hi\": \"आप अपने लक्ष्यों के स्तर तक नहीं उठते।\", \"short_description_hi\": \"लक्ष्य दिशा निर्धारित करते हैं।\" },\n          { \"id\": 3, \"quote_en\": \"Every action you take is a vote for the type of person you wish to become.\", \"short_description_en\": \"Your habits define your identity over time.\", \"quote_hi\": \"आपका हर कार्य एक वोट है।\", \"short_description_hi\": \"आपकी आदतें आपकी पहचान बनाती हैं।\" },\n          { \"id\": 4, \"quote_en\": \"The most effective way to change your habits is to change your identity.\", \"short_description_en\": \"Focus on who you want to become, not what you want to achieve.\", \"quote_hi\": \"अपनी आदतें बदलने का सबसे प्रभावी तरीका अपनी पहचान बदलना है।\", \"short_description_hi\": \"इस पर ध्यान दें कि आप कौन बनना चाहते हैं।\" },\n          { \"id\": 5, \"quote_en\": \"Time magnifies the margin between success and failure.\", \"short_description_en\": \"Small differences compound into massive results.\", \"quote_hi\": \"समय सफलता और विफलता के बीच के अंतर को बढ़ाता है।\", \"short_description_hi\": \"छोटे अंतर बड़े परिणामों में बदलते हैं।\" },\n          { \"id\": 6, \"quote_en\": \"Breakthrough moments are the result of many previous actions.\", \"short_description_en\": \"Success is not a single event but a process.\", \"quote_hi\": \"सफलता की क्षण कई पिछले कार्यों का परिणाम है।\", \"short_description_hi\": \"सफलता एक प्रक्रिया है।\" },\n          { \"id\": 7, \"quote_en\": \"Goals are good for setting direction, systems are best for making progress.\", \"short_description_en\": \"Build systems instead of chasing goals.\", \"quote_hi\": \"लक्ष्य दिशा के लिए अच्छे हैं, सिस्टम प्रगति के लिए।\", \"short_description_hi\": \"सिस्टम बनाएं।\" },\n          { \"id\": 8, \"quote_en\": \"You should be far more concerned with your current trajectory than your current results.\", \"short_description_en\": \"Direction matters more than speed.\", \"quote_hi\": \"आपको अपने वर्तमान प्रक्षेपवक्र से अधिक चिंतित होना चाहिए।\", \"short_description_hi\": \"दिशा गति से अधिक मायने रखती है।\" },\n          { \"id\": 9, \"quote_en\": \"Habits are a double-edged sword.\", \"short_description_en\": \"Good habits build you up, bad habits tear you down.\", \"quote_hi\": \"आदतें दोधारी तलवार हैं।\", \"short_description_hi\": \"अच्छी आदतें आपको बनाती हैं।\" },\n          { \"id\": 10, \"quote_en\": \"Changes that seem small and unimportant at first will compound into remarkable results.\", \"short_description_en\": \"1% better every day adds up.\", \"quote_hi\": \"छोटे बदलाव उल्लेखनीय परिणाम देते हैं।\", \"short_description_hi\": \"हर दिन 1% बेहतर।\" },\n          { \"id\": 11, \"quote_en\": \"Success is the product of daily habits, not once-in-a-lifetime transformations.\", \"short_description_en\": \"Consistency beats intensity.\", \"quote_hi\": \"सफलता दैनिक आदतों का उत्पाद है।\", \"short_description_hi\": \"निरंतरता तीव्रता को हराती है।\" }\n        ]\n      },\n      {\n        \"number\": 2,\n        \"title\": \"How Your Habits Shape Your Identity\",\n        \"quotes\": [\n          { \"id\": 12, \"quote_en\": \"The real reason habits matter is not because they can get you better results, but because they can change your beliefs about yourself.\", \"short_description_en\": \"Habits shape who you believe you are.\", \"quote_hi\": \"आदतें मायने रखती हैं क्योंकि वे आपकी धारणा बदलती हैं।\", \"short_description_hi\": \"आदतें आपकी पहचान बनाती हैं।\" },\n          { \"id\": 13, \"quote_en\": \"Decide the type of person you want to be. Prove it to yourself with small wins.\", \"short_description_en\": \"Start with identity, then build habits around it.\", \"quote_hi\": \"तय करें कि आप कौन बनना चाहते हैं।\", \"short_description_hi\": \"पहचान से शुरू करें।\" },\n          { \"id\": 14, \"quote_en\": \"Your identity emerges out of your habits.\", \"short_description_en\": \"What you do repeatedly shapes who you are.\", \"quote_hi\": \"आपकी पहचान आपकी आदतों से निकलती है।\", \"short_description_hi\": \"आप जो बार-बार करते हैं वही आप हैं।\" },\n          { \"id\": 15, \"quote_en\": \"The more pride you have in a particular aspect of your identity, the more motivated you will be to maintain the habits associated with it.\", \"short_description_en\": \"Pride in identity fuels habit consistency.\", \"quote_hi\": \"पहचान में गर्व आदत की निरंतरता को बढ़ावा देता है।\", \"short_description_hi\": \"गर्व आदतों को बनाए रखता है।\" },\n          { \"id\": 16, \"quote_en\": \"True behavior change is identity change.\", \"short_description_en\": \"Don't aim for a result, aim to become someone.\", \"quote_hi\": \"सच्चा व्यवहार परिवर्तन पहचान परिवर्तन है।\", \"short_description_hi\": \"कोई बनने का लक्ष्य रखें।\" },\n          { \"id\": 17, \"quote_en\": \"The goal is not to read a book, the goal is to become a reader.\", \"short_description_en\": \"Focus on identity over outcomes.\", \"quote_hi\": \"लक्ष्य किताब पढ़ना नहीं, पाठक बनना है।\", \"short_description_hi\": \"परिणामों पर नहीं पहचान पर ध्यान दें।\" },\n          { \"id\": 18, \"quote_en\": \"When you have repeated a story to yourself for years, it is easy to slide into these mental grooves.\", \"short_description_en\": \"Old stories about yourself can limit growth.\", \"quote_hi\": \"जब आप वर्षों से एक कहानी दोहराते हैं तो बदलना कठिन है।\", \"short_description_hi\": \"पुरानी कहानियां विकास को सीमित करती हैं।\" },\n          { \"id\": 19, \"quote_en\": \"Becoming the best version of yourself requires you to continuously edit your beliefs.\", \"short_description_en\": \"Growth requires updating your self-image.\", \"quote_hi\": \"सर्वश्रेष्ठ बनने के लिए अपनी धारणाओं को लगातार संपादित करें।\", \"short_description_hi\": \"विकास के लिए आत्म-छवि अपडेट करें।\" },\n          { \"id\": 20, \"quote_en\": \"Your habits are how you embody your identity.\", \"short_description_en\": \"Each habit is evidence of who you are.\", \"quote_hi\": \"आपकी आदतें आपकी पहचान का प्रतीक हैं।\", \"short_description_hi\": \"हर आदत आपकी पहचान का सबूत है।\" },\n          { \"id\": 21, \"quote_en\": \"Building habits is the process of becoming yourself.\", \"short_description_en\": \"You are your habits.\", \"quote_hi\": \"आदतें बनाना खुद बनने की प्रक्रिया है।\", \"short_description_hi\": \"आप अपनी आदतें हैं।\" }\n        ]\n      },\n      {\n        \"number\": 3,\n        \"title\": \"How to Build Better Habits in 4 Simple Steps\",\n        \"quotes\": [\n          { \"id\": 22, \"quote_en\": \"The process of building a habit can be divided into four simple steps: cue, craving, response, and reward.\", \"short_description_en\": \"The habit loop has four stages.\", \"quote_hi\": \"आदत बनाने की प्रक्रिया चार चरणों में है।\", \"short_description_hi\": \"आदत लूप के चार चरण हैं।\" },\n          { \"id\": 23, \"quote_en\": \"Make it obvious. Make it attractive. Make it easy. Make it satisfying.\", \"short_description_en\": \"The four laws of behavior change.\", \"quote_hi\": \"स्पष्ट बनाएं। आकर्षक बनाएं। आसान बनाएं। संतोषजनक बनाएं।\", \"short_description_hi\": \"व्यवहार परिवर्तन के चार नियम।\" },\n          { \"id\": 24, \"quote_en\": \"We don't need to be aware of the cue for a habit to begin.\", \"short_description_en\": \"Most habits run on autopilot.\", \"quote_hi\": \"हमें आदत शुरू होने के संकेत से अवगत होने की आवश्यकता नहीं है।\", \"short_description_hi\": \"अधिकांश आदतें ऑटोपायलट पर चलती हैं।\" },\n          { \"id\": 25, \"quote_en\": \"The ultimate purpose of habits is to solve the problems of life with as little energy and effort as possible.\", \"short_description_en\": \"Habits free up mental energy.\", \"quote_hi\": \"आदतों का उद्देश्य कम ऊर्जा से समस्याएं हल करना है।\", \"short_description_hi\": \"आदतें मानसिक ऊर्जा बचाती हैं।\" },\n          { \"id\": 26, \"quote_en\": \"Habits do not restrict freedom. They create it.\", \"short_description_en\": \"Good habits give you more free time and energy.\", \"quote_hi\": \"आदतें स्वतंत्रता को प्रतिबंधित नहीं करतीं। वे इसे बनाती हैं।\", \"short_description_hi\": \"अच्छी आदतें अधिक समय देती हैं।\" },\n          { \"id\": 27, \"quote_en\": \"If you want better results, forget about setting goals. Focus on your system instead.\", \"short_description_en\": \"Systems drive consistent results.\", \"quote_hi\": \"बेहतर परिणामों के लिए सिस्टम पर ध्यान दें।\", \"short_description_hi\": \"सिस्टम निरंतर परिणाम देते हैं।\" },\n          { \"id\": 28, \"quote_en\": \"You get what you repeat.\", \"short_description_en\": \"Repetition is the mother of mastery.\", \"quote_hi\": \"आपको वही मिलता है जो आप दोहराते हैं।\", \"short_description_hi\": \"दोहराव महारत की जननी है।\" },\n          { \"id\": 29, \"quote_en\": \"Motion makes you feel like you're getting things done. But really, you're just preparing to get something done.\", \"short_description_en\": \"Action beats planning every time.\", \"quote_hi\": \"गति आपको लगता है कि आप कुछ कर रहे हैं। लेकिन वास्तव में आप तैयारी कर रहे हैं।\", \"short_description_hi\": \"कार्य हमेशा योजना को हराता है।\" },\n          { \"id\": 30, \"quote_en\": \"The most effective form of learning is practice, not planning.\", \"short_description_en\": \"Do the work instead of planning the work.\", \"quote_hi\": \"सीखने का सबसे प्रभावी रूप अभ्यास है, योजना नहीं।\", \"short_description_hi\": \"काम करें, योजना नहीं।\" },\n          { \"id\": 31, \"quote_en\": \"Standardize before you optimize. You can't improve a habit that doesn't exist.\", \"short_description_en\": \"First build the habit, then perfect it.\", \"quote_hi\": \"अनुकूलित करने से पहले मानकीकृत करें।\", \"short_description_hi\": \"पहले आदत बनाएं, फिर सुधारें।\" }\n        ]\n      }\n    ]\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Import Quotes (via S3 Key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/books/{{book_id}}/import-json",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "books", "{{book_id}}", "import-json"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"s3Key\": \"imports/atomic-habits.json\"\n}"
+            },
+            "description": "Requires S3 to be configured in .env"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Books (User)",
+      "description": "Book listing for users",
+      "item": [
+        {
+          "name": "List All Books",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["books"]
+            }
+          }
+        },
+        {
+          "name": "Get Book Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/books/{{book_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["books", "{{book_id}}"]
+            }
+          }
+        },
+        {
+          "name": "List Books (No Token)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["books"]
+            },
+            "description": "Should return 401 - Access token is required"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Purchases (User)",
+      "description": "Purchase verification and history",
+      "item": [
+        {
+          "name": "Verify Purchase (Monthly)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.success) {",
+                  "  pm.collectionVariables.set('purchase_id', res.data.id);",
+                  "  console.log('Purchase ID saved: ' + res.data.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/purchase/verify",
+              "host": ["{{base_url}}"],
+              "path": ["purchase", "verify"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"purchaseToken\": \"test-token-001\",\n  \"productId\": \"atomic_habits_monthly\",\n  \"platform\": \"GOOGLE_PLAY\",\n  \"bookId\": \"{{book_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify Purchase (Duplicate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/purchase/verify",
+              "host": ["{{base_url}}"],
+              "path": ["purchase", "verify"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"purchaseToken\": \"test-token-001\",\n  \"productId\": \"atomic_habits_monthly\",\n  \"platform\": \"GOOGLE_PLAY\",\n  \"bookId\": \"{{book_id}}\"\n}"
+            },
+            "description": "Should return 409 - Purchase already verified"
+          }
+        },
+        {
+          "name": "Purchase History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/purchase",
+              "host": ["{{base_url}}"],
+              "path": ["purchase"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Active Book (User)",
+      "description": "Set and get active book",
+      "item": [
+        {
+          "name": "Set Active Book",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/active-book",
+              "host": ["{{base_url}}"],
+              "path": ["active-book"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"purchaseId\": \"{{purchase_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Active Book",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/active-book",
+              "host": ["{{base_url}}"],
+              "path": ["active-book"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Content — Wallpaper (User)",
+      "description": "Get today's wallpaper image",
+      "item": [
+        {
+          "name": "Get Wallpaper (Samsung S24 — 1080x2340)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/today?width=1080&height=2340",
+              "host": ["{{base_url}}"],
+              "path": ["content", "today"],
+              "query": [
+                { "key": "width", "value": "1080" },
+                { "key": "height", "value": "2340" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Wallpaper (iPhone 15 Pro — 1179x2556)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/today?width=1179&height=2556",
+              "host": ["{{base_url}}"],
+              "path": ["content", "today"],
+              "query": [
+                { "key": "width", "value": "1179" },
+                { "key": "height", "value": "2556" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Wallpaper (Pixel 8 — 1080x2400)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/today?width=1080&height=2400",
+              "host": ["{{base_url}}"],
+              "path": ["content", "today"],
+              "query": [
+                { "key": "width", "value": "1080" },
+                { "key": "height", "value": "2400" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Wallpaper (Default Size)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/content/today",
+              "host": ["{{base_url}}"],
+              "path": ["content", "today"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
