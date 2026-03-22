@@ -33,19 +33,29 @@ npm install
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env with your database credentials and other config
+# Edit .env with your local database credentials
 
 # Run database migrations
-npx prisma migrate dev
+npm run migrate
 
 # Generate Prisma client
 npx prisma generate
+
+# Seed the database with sample data
+npm run seed
 
 # Start development server
 npm run dev
 ```
 
 ### Environment Variables
+
+The project supports two database environments via separate env files:
+
+| File | Database |
+| ---- | -------- |
+| `.env` | Local PostgreSQL (for daily development) |
+| `.env.neon` | Neon hosted PostgreSQL (shared/staging) |
 
 Copy `.env.example` to `.env` and update the values:
 
@@ -60,17 +70,26 @@ Copy `.env.example` to `.env` and update the values:
 
 See `.env.example` for the full list.
 
+> **Note:** `.env` and `.env.neon` are both gitignored. Never commit these files.
+
 ## Development Notes
 
 - **Dev OTP:** Use `1234` as OTP for all phone numbers in development mode (`NODE_ENV=development`).
 - **S3 is optional:** Wallpaper images are returned directly in the API response when S3 is not configured.
+- **macOS:** Install canvas dependencies first: `brew install pkg-config cairo pango libpng jpeg giflib librsvg pixman`
+- **Port conflict on macOS:** macOS uses port 5000 for AirPlay. Change `PORT=3000` in your `.env` if Swagger is not accessible.
 
 ## Scripts
 
-| Command          | Description                        |
-| ---------------- | ---------------------------------- |
-| `npm run dev`    | Start dev server with nodemon      |
-| `npm start`      | Start production server            |
+| Command | Database | Description |
+| ------- | -------- | ----------- |
+| `npm run dev` | Local | Start dev server with nodemon |
+| `npm run dev:neon` | Neon | Start dev server against Neon DB |
+| `npm run migrate` | Local | Run Prisma migrations |
+| `npm run migrate:neon` | Neon | Run Prisma migrations on Neon |
+| `npm run seed` | Local | Seed database with sample data |
+| `npm run seed:neon` | Neon | Seed Neon database with sample data |
+| `npm start` | — | Start production server |
 
 ## API Documentation (Swagger)
 

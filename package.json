@@ -6,11 +6,12 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon --exec \"node --experimental-strip-types\" src/server.js",
+    "dev:neon": "nodemon --exec \"dotenv -e .env.neon -- node --experimental-strip-types\" src/server.js",
     "start": "node --experimental-strip-types src/server.js",
-    "seed": "node --experimental-strip-types prisma/seed.js"
-  },
-  "prisma": {
-    "seed": "node --experimental-strip-types prisma/seed.js"
+    "seed": "node --experimental-strip-types prisma/seed.js",
+    "seed:neon": "dotenv -e .env.neon -- node --experimental-strip-types prisma/seed.js",
+    "migrate": "npx prisma migrate dev",
+    "migrate:neon": "dotenv -e .env.neon -- npx prisma migrate dev"
   },
   "repository": {
     "type": "git",
@@ -44,6 +45,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
+    "dotenv-cli": "^11.0.0",
     "nodemon": "^3.1.14",
     "prisma": "^7.5.0"
   }
