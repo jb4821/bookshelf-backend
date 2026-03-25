@@ -1,5 +1,6 @@
 import prisma from "../config/db.js";
 import AppError from "../utils/appError.js";
+import { translateQuotes } from "./translate.service.js";
 
 /**
  * Flatten chapter-based quotes into sequential book_contents rows.
@@ -63,10 +64,54 @@ export const flattenQuotes = (jsonData) => {
 };
 
 /**
+ * Translate quotes in background and update DB rows one by one.
+ * Runs after the initial English-only import is saved.
+ */
+const translateInBackground = async (bookId, rows, targetLanguages) => {
+  try {
+    // Mark as IN_PROGRESS
+    await prisma.book.update({
+      where: { id: bookId },
+      data: { translationStatus: "IN_PROGRESS" },
+    });
+
+    console.log(`[Translation] Starting background translation for book ${bookId}`);
+    const translatedRows = await translateQuotes(rows, targetLanguages);
+
+    // Update each row in DB with translated content
+    for (const row of translatedRows) {
+      await prisma.bookContent.update({
+        where: { bookId_quoteIndex: { bookId, quoteIndex: row.quoteIndex } },
+        data: {
+          quotes: row.quotes,
+          descriptions: row.descriptions,
+        },
+      });
+    }
+
+    // Mark as COMPLETED
+    await prisma.book.update({
+      where: { id: bookId },
+      data: { translationStatus: "COMPLETED" },
+    });
+
+    console.log(`[Translation] Completed for book ${bookId} — ${translatedRows.length} quotes updated`);
+  } catch (error) {
+    // Mark as FAILED
+    await prisma.book.update({
+      where: { id: bookId },
+      data: { translationStatus: "FAILED" },
+    }).catch(() => {});
+
+    console.error(`[Translation] Failed for book ${bookId}:`, error.message);
+  }
+};
+
+/**
  * Import flattened quotes into book_contents table.
  * Deletes existing content for the book before inserting.
  */
-export const importQuotesToBook = async (bookId, jsonData) => {
+export const importQuotesToBook = async (bookId, jsonData, targetLanguages) => {
   // Validate book exists
   const book = await prisma.book.findUnique({ where: { id: bookId } });
   if (!book) {
@@ -93,12 +138,12 @@ export const importQuotesToBook = async (bookId, jsonData) => {
     );
   }
 
-  // Delete existing content and insert new in a transaction
+  // Save English-only quotes to DB immediately
   await prisma.$transaction(async (tx) => {
     // Remove old content
     await tx.bookContent.deleteMany({ where: { bookId } });
 
-    // Batch insert
+    // Batch insert (English only for now)
     await tx.bookContent.createMany({
       data: rows.map((row) => ({
         bookId,
@@ -117,5 +162,10 @@ export const importQuotesToBook = async (bookId, jsonData) => {
     });
   });
 
-  return { totalQuotes: rows.length };
+  // Start background translation (non-blocking)
+  if (targetLanguages && targetLanguages.length > 0) {
+    translateInBackground(bookId, rows, targetLanguages);
+  }
+
+  return { totalQuotes: rows.length, translating: targetLanguages?.length > 0 };
 };

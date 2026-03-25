@@ -277,6 +277,9 @@ const importJsonSchema = Joi.object({
       )
       .required(),
   }),
+  targetLanguages: Joi.array()
+    .items(Joi.string().length(2))
+    .default(["hi", "gu", "mr", "ta", "te", "bn"]),
 }).or("s3Key", "data");
 
 /**
@@ -288,6 +291,10 @@ const importJsonSchema = Joi.object({
  *       Import book content from a JSON file. Provide either:
  *       - `s3Key`: path to JSON file in S3 (e.g., "imports/atomic-habits.json")
  *       - `data`: direct JSON object with chapters and quotes
+ *
+ *       **Auto-translation:** Provide only English quotes and pass `targetLanguages`
+ *       to auto-translate into multiple languages. Default: `["hi", "gu", "mr", "ta", "te", "bn"]`.
+ *       Set `targetLanguages: []` to skip translation.
  *
  *       The import will replace all existing content for the book.
  *       Minimum 31 quotes required.
@@ -312,6 +319,12 @@ const importJsonSchema = Joi.object({
  *                 type: string
  *                 example: imports/atomic-habits.json
  *                 description: S3 key to JSON file
+ *               targetLanguages:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 example: ["hi", "gu", "mr", "ta", "te", "bn"]
+ *                 description: Language codes to auto-translate into (default all 6 Indian languages, pass [] to skip)
  *               data:
  *                 type: object
  *                 description: Direct JSON with chapters and quotes

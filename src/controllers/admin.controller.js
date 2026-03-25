@@ -5,7 +5,7 @@ import AppError from "../utils/appError.js";
 export const importBookJson = async (req, res, next) => {
   try {
     const { bookId } = req.params;
-    const { s3Key, data } = req.body;
+    const { s3Key, data, targetLanguages } = req.body;
 
     let jsonData;
 
@@ -23,13 +23,16 @@ export const importBookJson = async (req, res, next) => {
       );
     }
 
-    const result = await importQuotesToBook(bookId, jsonData);
+    const result = await importQuotesToBook(bookId, jsonData, targetLanguages);
 
     res.json({
       success: true,
       data: {
-        message: `Successfully imported ${result.totalQuotes} quotes`,
+        message: result.translating
+          ? `Successfully imported ${result.totalQuotes} quotes. Translation in progress — English fallback available immediately.`
+          : `Successfully imported ${result.totalQuotes} quotes`,
         totalQuotes: result.totalQuotes,
+        translating: result.translating,
       },
     });
   } catch (error) {
