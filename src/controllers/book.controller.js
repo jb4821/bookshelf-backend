@@ -50,6 +50,7 @@ export const getBookById = async (req, res, next) => {
         coverImage: book.coverImage,
         price: book.price,
         totalQuotes: book.totalQuotes,
+        translationStatus: book.translationStatus,
         createdAt: book.createdAt,
       },
     });
