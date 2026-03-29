@@ -131,3 +131,87 @@ export const getTodayContent = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getCurrentQuote = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    // 1. Get user's active book
+    const activeBook = await prisma.activeBook.findUnique({
+      where: { userId },
+      include: {
+        purchase: {
+          include: { book: true },
+        },
+      },
+    });
+
+    if (!activeBook || activeBook.purchase.status !== "ACTIVE") {
+      return res.json({ success: true, data: null });
+    }
+
+    const { purchase } = activeBook;
+
+    if (new Date(purchase.endDate) < new Date()) {
+      return res.json({ success: true, data: null });
+    }
+
+    // 2. Calculate day index
+    const book = purchase.book;
+    const dayIndex = calculateDayIndex(purchase.startDate, book.totalQuotes);
+
+    // 3. Get user's preferred language
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { preferredLanguage: true },
+    });
+    const lang = user?.preferredLanguage || "en";
+
+    // 4. Fetch quote
+    const content = await prisma.bookContent.findFirst({
+      where: { bookId: book.id, quoteIndex: dayIndex },
+    });
+
+    if (!content) {
+      return res.json({ success: true, data: null });
+    }
+
+    // 5. Check read status
+    const readRecord = await prisma.userQuoteRead.findUnique({
+      where: {
+        userId_bookId_quoteIndex: {
+          userId,
+          bookId: book.id,
+          quoteIndex: dayIndex,
+        },
+      },
+    });
+
+    res.json({
+      success: true,
+      data: {
+        bookId: book.id,
+        bookTitle: book.title,
+        author: book.author,
+        coverImage: book.coverImage,
+        chapterNumber: content.chapterNumber,
+        chapterTitle: content.chapterTitle,
+        quoteIndex: content.quoteIndex,
+        dayNumber: dayIndex,
+        totalQuotes: book.totalQuotes,
+        quote: content.quotes[lang] || content.quotes["en"] || "",
+        shortDescription:
+          content.descriptions[lang] || content.descriptions["en"] || "",
+        deepDive:
+          content.deepDives?.[lang] || content.deepDives?.["en"] || null,
+        realWorldExample:
+          content.realWorldExamples?.[lang] ||
+          content.realWorldExamples?.["en"] ||
+          null,
+        isRead: !!readRecord,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};

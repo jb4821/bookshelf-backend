@@ -12,14 +12,17 @@ datasource db {
 model User {
   id                String   @id @default(uuid())
   phone             String   @unique
+  name              String?
   email             String?
   preferredLanguage String   @default("en") @map("preferred_language")
+  notifications     Json     @default("{\"dailyReminder\": true, \"newBooks\": true}")
   role              Role     @default(USER)
   createdAt         DateTime @default(now()) @map("created_at")
   updatedAt         DateTime @updatedAt @map("updated_at")
 
   purchases  Purchase[]
   activeBook ActiveBook?
+  quoteReads UserQuoteRead[]
 
   @@map("users")
 }
@@ -46,17 +49,23 @@ model Book {
   id                String            @id @default(uuid())
   title             String
   author            String?
+  description       String?
   categoryId        String            @map("category_id")
   coverImage        String?           @map("cover_image")
   price             Decimal           @default(0) @db.Decimal(10, 2)
+  rating            Decimal?          @db.Decimal(2, 1)
   totalQuotes       Int               @default(0) @map("total_quotes")
+  totalPages        Int?              @map("total_pages")
+  publishedYear     Int?              @map("published_year")
+  tags              Json?
   isActive          Boolean           @default(true) @map("is_active")
   translationStatus TranslationStatus @default(NONE) @map("translation_status")
   createdAt         DateTime          @default(now()) @map("created_at")
 
-  category Category   @relation(fields: [categoryId], references: [id])
-  contents BookContent[]
-  purchases Purchase[]
+  category   Category        @relation(fields: [categoryId], references: [id])
+  contents   BookContent[]
+  purchases  Purchase[]
+  quoteReads UserQuoteRead[]
 
   @@map("books")
 }
@@ -76,8 +85,10 @@ model BookContent {
   chapterNumber Int      @map("chapter_number")
   chapterTitle  String?  @map("chapter_title")
   quoteIndex    Int      @map("quote_index")
-  quotes        Json     // { "en": "...", "hi": "..." }
-  descriptions  Json     // { "en": "...", "hi": "..." }
+  quotes             Json     // { "en": "...", "hi": "..." }
+  descriptions       Json     // { "en": "...", "hi": "..." }
+  deepDives          Json?    @map("deep_dives")          // { "en": "...", "hi": "..." }
+  realWorldExamples  Json?    @map("real_world_examples") // { "en": "...", "hi": "..." }
   createdAt     DateTime @default(now()) @map("created_at")
 
   book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
@@ -130,6 +141,22 @@ model ActiveBook {
   purchase Purchase @relation(fields: [purchaseId], references: [id])
 
   @@map("active_books")
+}
+
+// ─── User Quote Reads ───────────────────────────────
+
+model UserQuoteRead {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  bookId     String   @map("book_id")
+  quoteIndex Int      @map("quote_index")
+  readAt     DateTime @default(now()) @map("read_at")
+
+  user User @relation(fields: [userId], references: [id])
+  book Book @relation(fields: [bookId], references: [id])
+
+  @@unique([userId, bookId, quoteIndex])
+  @@map("user_quote_reads")
 }
 
 // ─── Templates ───────────────────────────────────────

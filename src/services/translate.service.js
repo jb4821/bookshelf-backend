@@ -61,6 +61,24 @@ export const translateQuotes = async (
         if (translated) row.descriptions[lang] = translated;
       }
 
+      // Translate deep dive
+      if (row.deepDives) {
+        const englishDeepDive = row.deepDives.en;
+        if (englishDeepDive && !row.deepDives[lang]) {
+          const translated = await translateText(englishDeepDive, lang);
+          if (translated) row.deepDives[lang] = translated;
+        }
+      }
+
+      // Translate real world example
+      if (row.realWorldExamples) {
+        const englishExample = row.realWorldExamples.en;
+        if (englishExample && !row.realWorldExamples[lang]) {
+          const translated = await translateText(englishExample, lang);
+          if (translated) row.realWorldExamples[lang] = translated;
+        }
+      }
+
       // Small delay between translations to avoid rate limiting
       await delay(100);
     }

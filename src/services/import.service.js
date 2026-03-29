@@ -36,6 +36,9 @@ export const flattenQuotes = (jsonData) => {
       const quotes = {};
       const descriptions = {};
 
+      const deepDives = {};
+      const realWorldExamples = {};
+
       for (const [key, value] of Object.entries(quote)) {
         if (key === "id") continue;
 
@@ -45,6 +48,12 @@ export const flattenQuotes = (jsonData) => {
         } else if (key.startsWith("short_description_")) {
           const lang = key.replace("short_description_", "");
           descriptions[lang] = value;
+        } else if (key.startsWith("deep_dive_")) {
+          const lang = key.replace("deep_dive_", "");
+          deepDives[lang] = value;
+        } else if (key.startsWith("real_world_example_")) {
+          const lang = key.replace("real_world_example_", "");
+          realWorldExamples[lang] = value;
         }
       }
 
@@ -54,6 +63,8 @@ export const flattenQuotes = (jsonData) => {
         quoteIndex,
         quotes,
         descriptions,
+        deepDives: Object.keys(deepDives).length > 0 ? deepDives : null,
+        realWorldExamples: Object.keys(realWorldExamples).length > 0 ? realWorldExamples : null,
       });
 
       quoteIndex++;
@@ -85,6 +96,8 @@ const translateInBackground = async (bookId, rows, targetLanguages) => {
         data: {
           quotes: row.quotes,
           descriptions: row.descriptions,
+          deepDives: row.deepDives,
+          realWorldExamples: row.realWorldExamples,
         },
       });
     }
@@ -152,6 +165,8 @@ export const importQuotesToBook = async (bookId, jsonData, targetLanguages) => {
         quoteIndex: row.quoteIndex,
         quotes: row.quotes,
         descriptions: row.descriptions,
+        deepDives: row.deepDives,
+        realWorldExamples: row.realWorldExamples,
       })),
     });
 

@@ -10,6 +10,39 @@ const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
+// ─── Fixed UUIDs for seed data ───────────────────────
+// Pattern: 00000000-0000-0000-0000-00000000XXXX (easy to identify as seed)
+const SEED_IDS = {
+  categories: {
+    selfHelp:     "00000000-0000-0000-0000-000000000c01",
+    productivity: "00000000-0000-0000-0000-000000000c02",
+    mindfulness:  "00000000-0000-0000-0000-000000000c03",
+    business:     "00000000-0000-0000-0000-000000000c04",
+    finance:      "00000000-0000-0000-0000-000000000c05",
+  },
+  books: {
+    atomicHabits:    "00000000-0000-0000-0000-000000000b01",
+    deepWork:        "00000000-0000-0000-0000-000000000b02",
+    powerOfNow:      "00000000-0000-0000-0000-000000000b03",
+    thinkAndGrowRich:"00000000-0000-0000-0000-000000000b04",
+    richDadPoorDad:  "00000000-0000-0000-0000-000000000b05",
+  },
+  users: {
+    admin:  "00000000-0000-0000-0000-000000000u01",
+    rahul:  "00000000-0000-0000-0000-000000000u02",
+    priya:  "00000000-0000-0000-0000-000000000u03",
+    amit:   "00000000-0000-0000-0000-000000000u04",
+    sneha:  "00000000-0000-0000-0000-000000000u05",
+    vikram: "00000000-0000-0000-0000-000000000u06",
+    neha:   "00000000-0000-0000-0000-000000000u07",
+    arjun:  "00000000-0000-0000-0000-000000000u08",
+    kavya:  "00000000-0000-0000-0000-000000000u09",
+  },
+};
+
+const allCategoryIds = Object.values(SEED_IDS.categories);
+const allBookIds = Object.values(SEED_IDS.books);
+
 // ─── Helpers ──────────────────────────────────────────
 function daysFromNow(days) {
   const d = new Date();
@@ -25,51 +58,41 @@ function daysAgo(days) {
 async function main() {
   console.log("Seeding database...\n");
 
-  // ─── Clean up existing user-related data ──────────────
-  await prisma.activeBook.deleteMany();
-  await prisma.purchase.deleteMany();
-  await prisma.user.deleteMany();
-  console.log("✓ Cleared users, purchases, active books");
+  // ─── Clean up only seed data (other developers' data stays) ──
+  const seedPhones = ["+910000000000", "+911111111111", "+912222222222", "+913333333333", "+914444444444", "+915555555555", "+916666666666", "+917777777777", "+918888888888"];
+  const existingUsers = await prisma.user.findMany({ where: { phone: { in: seedPhones } }, select: { id: true } });
+  const existingUserIds = existingUsers.map((u) => u.id);
+
+  if (existingUserIds.length > 0) {
+    await prisma.activeBook.deleteMany({ where: { userId: { in: existingUserIds } } });
+    await prisma.userQuoteRead.deleteMany({ where: { userId: { in: existingUserIds } } });
+    await prisma.purchase.deleteMany({ where: { userId: { in: existingUserIds } } });
+    await prisma.user.deleteMany({ where: { id: { in: existingUserIds } } });
+  }
+  await prisma.bookContent.deleteMany({ where: { bookId: { in: allBookIds } } });
+  await prisma.book.deleteMany({ where: { id: { in: allBookIds } } });
+  await prisma.category.deleteMany({ where: { id: { in: allCategoryIds } } });
+  console.log("✓ Cleared seed data only (other data untouched)");
 
   // ─── Categories ───────────────────────────────────────
   const [selfHelp, productivity, mindfulness, business, finance] =
     await Promise.all([
-      prisma.category.upsert({ where: { name: "Self Help" }, update: {}, create: { name: "Self Help" } }),
-      prisma.category.upsert({ where: { name: "Productivity" }, update: {}, create: { name: "Productivity" } }),
-      prisma.category.upsert({ where: { name: "Mindfulness" }, update: {}, create: { name: "Mindfulness" } }),
-      prisma.category.upsert({ where: { name: "Business" }, update: {}, create: { name: "Business" } }),
-      prisma.category.upsert({ where: { name: "Finance" }, update: {}, create: { name: "Finance" } }),
+      prisma.category.upsert({ where: { name: "Self Help" }, update: {}, create: { id: SEED_IDS.categories.selfHelp, name: "Self Help" } }),
+      prisma.category.upsert({ where: { name: "Productivity" }, update: {}, create: { id: SEED_IDS.categories.productivity, name: "Productivity" } }),
+      prisma.category.upsert({ where: { name: "Mindfulness" }, update: {}, create: { id: SEED_IDS.categories.mindfulness, name: "Mindfulness" } }),
+      prisma.category.upsert({ where: { name: "Business" }, update: {}, create: { id: SEED_IDS.categories.business, name: "Business" } }),
+      prisma.category.upsert({ where: { name: "Finance" }, update: {}, create: { id: SEED_IDS.categories.finance, name: "Finance" } }),
     ]);
   console.log("✓ 5 categories seeded");
 
   // ─── Books ────────────────────────────────────────────
   const [atomicHabits, deepWork, powerOfNow, thinkAndGrowRich, richDadPoorDad] =
     await Promise.all([
-      prisma.book.upsert({
-        where: { id: "book-atomic-habits" },
-        update: {},
-        create: { id: "book-atomic-habits", title: "Atomic Habits", author: "James Clear", categoryId: selfHelp.id, price: 299, totalQuotes: 31, isActive: true },
-      }),
-      prisma.book.upsert({
-        where: { id: "book-deep-work" },
-        update: {},
-        create: { id: "book-deep-work", title: "Deep Work", author: "Cal Newport", categoryId: productivity.id, price: 249, totalQuotes: 31, isActive: true },
-      }),
-      prisma.book.upsert({
-        where: { id: "book-power-of-now" },
-        update: {},
-        create: { id: "book-power-of-now", title: "The Power of Now", author: "Eckhart Tolle", categoryId: mindfulness.id, price: 199, totalQuotes: 31, isActive: true },
-      }),
-      prisma.book.upsert({
-        where: { id: "book-think-and-grow-rich" },
-        update: {},
-        create: { id: "book-think-and-grow-rich", title: "Think and Grow Rich", author: "Napoleon Hill", categoryId: business.id, price: 179, totalQuotes: 31, isActive: true },
-      }),
-      prisma.book.upsert({
-        where: { id: "book-rich-dad-poor-dad" },
-        update: {},
-        create: { id: "book-rich-dad-poor-dad", title: "Rich Dad Poor Dad", author: "Robert Kiyosaki", categoryId: finance.id, price: 219, totalQuotes: 31, isActive: true },
-      }),
+      prisma.book.create({ data: { id: SEED_IDS.books.atomicHabits, title: "Atomic Habits", author: "James Clear", description: "An easy and proven way to build good habits and break bad ones. Tiny changes, remarkable results.", categoryId: selfHelp.id, price: 299, rating: 4.8, totalPages: 320, publishedYear: 2018, tags: ["Self Help", "Psychology", "Productivity"], totalQuotes: 31, isActive: true } }),
+      prisma.book.create({ data: { id: SEED_IDS.books.deepWork, title: "Deep Work", author: "Cal Newport", description: "Rules for focused success in a distracted world. Learn to work deeply and produce at an elite level.", categoryId: productivity.id, price: 249, rating: 4.6, totalPages: 296, publishedYear: 2016, tags: ["Productivity", "Focus", "Career"], totalQuotes: 31, isActive: true } }),
+      prisma.book.create({ data: { id: SEED_IDS.books.powerOfNow, title: "The Power of Now", author: "Eckhart Tolle", description: "A guide to spiritual enlightenment. Discover the power of living in the present moment.", categoryId: mindfulness.id, price: 199, rating: 4.5, totalPages: 236, publishedYear: 1997, tags: ["Mindfulness", "Spirituality", "Meditation"], totalQuotes: 31, isActive: true } }),
+      prisma.book.create({ data: { id: SEED_IDS.books.thinkAndGrowRich, title: "Think and Grow Rich", author: "Napoleon Hill", description: "The classic guide to success and wealth creation through the power of thought and desire.", categoryId: business.id, price: 179, rating: 4.7, totalPages: 238, publishedYear: 1937, tags: ["Business", "Success", "Wealth"], totalQuotes: 31, isActive: true } }),
+      prisma.book.create({ data: { id: SEED_IDS.books.richDadPoorDad, title: "Rich Dad Poor Dad", author: "Robert Kiyosaki", description: "What the rich teach their kids about money that the poor and middle class do not.", categoryId: finance.id, price: 219, rating: 4.6, totalPages: 336, publishedYear: 1997, tags: ["Finance", "Investing", "Money"], totalQuotes: 31, isActive: true } }),
     ]);
   console.log("✓ 5 books seeded");
 
@@ -205,19 +228,22 @@ async function main() {
 
   // ─── Users ────────────────────────────────────────────
   // 1 admin + 8 normal users with different languages and platforms
+  // Also clear quote reads
+  await prisma.userQuoteRead.deleteMany();
+
   const admin = await prisma.user.create({
-    data: { phone: "+910000000000", email: "admin@bookshelf.com", preferredLanguage: "en", role: "ADMIN" },
+    data: { id: SEED_IDS.users.admin, phone: "+910000000000", name: "Admin", email: "admin@bookshelf.com", preferredLanguage: "en", role: "ADMIN" },
   });
 
   const users = await Promise.all([
-    prisma.user.create({ data: { phone: "+911111111111", email: "rahul@example.com",   preferredLanguage: "en", role: "USER" } }),
-    prisma.user.create({ data: { phone: "+912222222222", email: "priya@example.com",   preferredLanguage: "hi", role: "USER" } }),
-    prisma.user.create({ data: { phone: "+913333333333", email: "amit@example.com",    preferredLanguage: "en", role: "USER" } }),
-    prisma.user.create({ data: { phone: "+914444444444", email: "sneha@example.com",   preferredLanguage: "hi", role: "USER" } }),
-    prisma.user.create({ data: { phone: "+915555555555", email: "vikram@example.com",  preferredLanguage: "en", role: "USER" } }),
-    prisma.user.create({ data: { phone: "+916666666666", email: "neha@example.com",    preferredLanguage: "hi", role: "USER" } }),
-    prisma.user.create({ data: { phone: "+917777777777", email: "arjun@example.com",   preferredLanguage: "en", role: "USER" } }),
-    prisma.user.create({ data: { phone: "+918888888888", email: "kavya@example.com",   preferredLanguage: "hi", role: "USER" } }),
+    prisma.user.create({ data: { id: SEED_IDS.users.rahul,  phone: "+911111111111", name: "Rahul Sharma",  email: "rahul@example.com",   preferredLanguage: "en", role: "USER" } }),
+    prisma.user.create({ data: { id: SEED_IDS.users.priya,  phone: "+912222222222", name: "Priya Patel",   email: "priya@example.com",   preferredLanguage: "hi", role: "USER" } }),
+    prisma.user.create({ data: { id: SEED_IDS.users.amit,   phone: "+913333333333", name: "Amit Kumar",    email: "amit@example.com",    preferredLanguage: "en", role: "USER" } }),
+    prisma.user.create({ data: { id: SEED_IDS.users.sneha,  phone: "+914444444444", name: "Sneha Gupta",   email: "sneha@example.com",   preferredLanguage: "hi", role: "USER" } }),
+    prisma.user.create({ data: { id: SEED_IDS.users.vikram, phone: "+915555555555", name: "Vikram Singh",  email: "vikram@example.com",  preferredLanguage: "en", role: "USER" } }),
+    prisma.user.create({ data: { id: SEED_IDS.users.neha,   phone: "+916666666666", name: "Neha Joshi",    email: "neha@example.com",    preferredLanguage: "hi", role: "USER" } }),
+    prisma.user.create({ data: { id: SEED_IDS.users.arjun,  phone: "+917777777777", name: "Arjun Mehta",   email: "arjun@example.com",   preferredLanguage: "en", role: "USER" } }),
+    prisma.user.create({ data: { id: SEED_IDS.users.kavya,  phone: "+918888888888", name: "Kavya Reddy",   email: "kavya@example.com",   preferredLanguage: "hi", role: "USER" } }),
   ]);
 
   const [rahul, priya, amit, sneha, vikram, neha, arjun, kavya] = users;

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import auth from "../middleware/auth.js";
-import { getTodayContent } from "../controllers/content.controller.js";
+import { getTodayContent, getCurrentQuote } from "../controllers/content.controller.js";
 
 const router = Router();
 
@@ -85,5 +85,65 @@ const router = Router();
  *         description: No active book or no content for today
  */
 router.get("/today", auth, getTodayContent);
+
+/**
+ * @swagger
+ * /content/current:
+ *   get:
+ *     summary: Get today's quote as JSON data
+ *     description: |
+ *       Returns today's quote data based on the user's active book.
+ *       Returns `null` if the user has no active book.
+ *       Unlike `/content/today` which returns a wallpaper image, this returns JSON for the app's reading screen.
+ *     tags: [Content]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Today's quote data or null
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   nullable: true
+ *                   type: object
+ *                   properties:
+ *                     bookId:
+ *                       type: string
+ *                     bookTitle:
+ *                       type: string
+ *                     author:
+ *                       type: string
+ *                     coverImage:
+ *                       type: string
+ *                       nullable: true
+ *                     chapterNumber:
+ *                       type: integer
+ *                     chapterTitle:
+ *                       type: string
+ *                     quoteIndex:
+ *                       type: integer
+ *                     dayNumber:
+ *                       type: integer
+ *                     totalQuotes:
+ *                       type: integer
+ *                     quote:
+ *                       type: string
+ *                     shortDescription:
+ *                       type: string
+ *                     deepDive:
+ *                       type: string
+ *                       nullable: true
+ *                     realWorldExample:
+ *                       type: string
+ *                       nullable: true
+ *                     isRead:
+ *                       type: boolean
+ */
+router.get("/current", auth, getCurrentQuote);
 
 export default router;
