@@ -23,6 +23,7 @@ app.use(express.json());
 
 // Swagger docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get("/api-docs-json", (req, res) => res.json(swaggerSpec));
 
 // Health check
 app.get("/api/v1/health", (req, res) => {
