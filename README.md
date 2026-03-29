@@ -105,21 +105,26 @@ You can view all endpoints, request/response schemas, and test APIs directly fro
 
 Base URL: `/api/v1`
 
-| Method | Endpoint                           | Auth     | Description              |
-| ------ | ---------------------------------- | -------- | ------------------------ |
-| GET    | `/health`                          | Public   | Health check             |
-| POST   | `/auth/send-otp`                   | Public   | Send OTP                 |
-| POST   | `/auth/verify-otp`                 | Public   | Verify OTP & get tokens  |
-| POST   | `/auth/refresh-token`              | Public   | Refresh access token     |
-| GET    | `/books`                           | Required | List books               |
-| GET    | `/books/:id`                       | Required | Book details             |
-| POST   | `/active-book`                     | Required | Set active book          |
-| GET    | `/active-book`                     | Required | Get active book          |
-| POST   | `/purchase/verify`                 | Required | Verify purchase          |
-| GET    | `/purchases`                       | Required | Purchase history         |
-| GET    | `/content/today?width=W&height=H`  | Required | Get today's wallpaper    |
-| POST   | `/admin/books`                     | Admin    | Create book              |
-| POST   | `/admin/books/:bookId/import-json` | Admin    | Import quotes from JSON  |
+| Method | Endpoint                                        | Auth     | Description                              |
+| ------ | ----------------------------------------------- | -------- | ---------------------------------------- |
+| GET    | `/health`                                       | Public   | Health check                             |
+| POST   | `/auth/send-otp`                                | Public   | Send OTP                                 |
+| POST   | `/auth/verify-otp`                              | Public   | Verify OTP & get tokens                  |
+| POST   | `/auth/refresh-token`                           | Public   | Refresh access token                     |
+| GET    | `/user/profile`                                 | Required | Get user profile                         |
+| PUT    | `/user/profile`                                 | Required | Update user profile                      |
+| GET    | `/books`                                        | Required | List books (search, filter by category)  |
+| GET    | `/books/:id`                                    | Required | Book details + chapters + read progress  |
+| GET    | `/books/:bookId/chapters/:chapterNumber/quotes` | Required | Chapter quotes list with read status     |
+| GET    | `/books/:bookId/quotes/:quoteIndex`             | Required | Quote detail (auto-marks as read)        |
+| POST   | `/active-book`                                  | Required | Set active book                          |
+| GET    | `/active-book`                                  | Required | Get active book                          |
+| POST   | `/purchase/verify`                              | Required | Verify purchase                          |
+| GET    | `/purchases`                                    | Required | Purchase history                         |
+| GET    | `/content/current`                              | Required | Get today's quote as JSON                |
+| GET    | `/content/today?width=W&height=H`               | Required | Get today's wallpaper as PNG             |
+| POST   | `/admin/books`                                  | Admin    | Create book                              |
+| POST   | `/admin/books/:bookId/import-json`              | Admin    | Import quotes from JSON                  |
 
 ## Project Structure
 
