@@ -55,6 +55,13 @@ npx prisma generate      # Regenerate Prisma client after schema change
 - Git branches: `feature/`, `fix/`, `chore/`
 - Commits: `feat:`, `fix:`, `chore:`, `docs:`
 
+## Rules
+
+- **Swagger:** Whenever a route/controller is added or modified, always update the Swagger JSDoc comments in the corresponding route file (`src/routes/*.js`). Never skip this step.
+- **Seed data:** Uses fixed UUIDs (`00000000-0000-0000-0000-...`). Only deletes seed data on re-run, not other developers' data.
+- **Migrations:** Run `npm run migrate:neon` locally before pushing. Render build does NOT run migrations.
+- **Hosted DB:** Neon (free tier). Seed hosted DB with `npm run seed:neon`.
+
 ## API Response Format
 
 ```json

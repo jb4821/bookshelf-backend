@@ -207,6 +207,12 @@ router.get("/:id", auth, getBookById);
  *                             type: string
  *                           shortDescription:
  *                             type: string
+ *                           deepDive:
+ *                             type: string
+ *                             nullable: true
+ *                           realWorldExample:
+ *                             type: string
+ *                             nullable: true
  *                           isRead:
  *                             type: boolean
  *       404:

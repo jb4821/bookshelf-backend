@@ -179,6 +179,8 @@ export const getChapterQuotes = async (req, res, next) => {
       quoteIndex: c.quoteIndex,
       quote: c.quotes[lang] || c.quotes["en"] || "",
       shortDescription: c.descriptions[lang] || c.descriptions["en"] || "",
+      deepDive: c.deepDives?.[lang] || c.deepDives?.["en"] || null,
+      realWorldExample: c.realWorldExamples?.[lang] || c.realWorldExamples?.["en"] || null,
       isRead: readSet.has(c.quoteIndex),
     }));
 
