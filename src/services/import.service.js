@@ -178,9 +178,12 @@ export const importQuotesToBook = async (bookId, jsonData, targetLanguages) => {
   });
 
   // Start background translation (non-blocking)
-  if (targetLanguages && targetLanguages.length > 0) {
-    translateInBackground(bookId, rows, targetLanguages);
-  }
+  // Default to all 6 languages if not specified
+  const languages = targetLanguages && targetLanguages.length > 0
+    ? targetLanguages
+    : ["hi", "gu", "mr", "ta", "te", "bn"];
 
-  return { totalQuotes: rows.length, translating: targetLanguages?.length > 0 };
+  translateInBackground(bookId, rows, languages);
+
+  return { totalQuotes: rows.length, translating: true };
 };
